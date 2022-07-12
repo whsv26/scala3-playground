@@ -33,7 +33,7 @@ lazy val fs2 = (project in file("./projects/fs2"))
     )
   )
 
-lazy val stdlib3 = (project in file("./projects/stdlib"))
+lazy val stdlib = (project in file("./projects/stdlib"))
   .settings(
     scalaVersion := "3.1.0",
     name := "stdlib",
