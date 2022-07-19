@@ -10,32 +10,21 @@ object Show:
     inline m match
       case s: Mirror.SumOf[T] => ???
       case p: Mirror.ProductOf[T] => showProduct[T](p)
-  end derived
 
-  inline def showProduct[T](m: Mirror.ProductOf[T]) =
-    val labels = summonLabels[m.MirroredElemLabels]
-    val instances = summonInstances[m.MirroredElemTypes].map(_.asInstanceOf[Show[Any]])
+  private inline def showProduct[T](m: Mirror.ProductOf[T]) =
     new Show[T]:
       def show(t: T): String =
-        labels
+        summonLabels[m.MirroredElemLabels]
           .lazyZip(t.asInstanceOf[Product].productIterator.to(Iterable))
-          .lazyZip(instances)
+          .lazyZip(summonInstances[m.MirroredElemTypes])
           .map((label, elem, instance) => s"$label: ${instance.show(elem)}")
           .mkString(s"${constValue[m.MirroredLabel]}(", ", ", ")")
-      end show
-  end showProduct
 
-  inline def summonLabels[T <: Tuple]: List[String] =
-    inline erasedValue[T] match
-      case _: EmptyTuple => Nil
-      case _: (t *: ts) => constValue[t].asInstanceOf[String] :: summonLabels[ts]
-  end summonLabels
+  private inline def summonLabels[T <: Tuple]: List[String] =
+    constValueTuple[T].toList.asInstanceOf[List[String]]
 
-  inline def summonInstances[T <: Tuple]: List[Show[_]] =
-    inline erasedValue[T] match
-      case _: EmptyTuple => Nil
-      case _: (t *: ts) => summonInline[Show[t]] :: summonInstances[ts]
-  end summonInstances
+  private inline def summonInstances[T <: Tuple]: List[Show[Any]] =
+    summonAll[Tuple.Map[T, Show]].toList.asInstanceOf[List[Show[Any]]]
 end Show
 
 given Show[Int] with
